@@ -124,9 +124,9 @@ if __name__ == "__main__":
                                                                     s_pret,
                                                                     s_pa)
                     S_prets[str(s_pa)][s_preq] = S_pret
-        with open("prets_{ms}_{mm}.json", "w") as prets_file:
+        with open(f"prets_{ms}_{mm}.json", "w") as prets_file:
             json.dump(S_prets, prets_file, indent=4)
-        with open("probs_{ms}_{mm}.json", "w") as probs_file:
+        with open(f"probs_{ms}_{mm}.json", "w") as probs_file:
             json.dump(probs, probs_file, indent=4)
         print("Tables complete")
 
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     while not stable:
         i += 1
         print(f"Step: {i}")
-        V = eval(S, A, probs, gamma, V, pi, 1)
+        V = eval(S, A, probs, gamma, V, pi, 0.0001)
         print("Policy evaluated.")
         stable, pi = improve(S, A, probs, gamma, V, pi)
         print("Policy updated.")
