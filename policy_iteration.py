@@ -142,4 +142,6 @@ if __name__ == "__main__":
         stable, pi = improve(S, A, probs, gamma, V, pi)
         print("Policy updated.")
 
+    with open(f"policy_{ms}_{mm}.json", "w") as policy_file:
+        json.dump(pi, policy_file, indent=4)
     print(pi)
