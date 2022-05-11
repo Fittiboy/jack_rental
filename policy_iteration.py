@@ -49,7 +49,7 @@ def improve(S, A, p, gamma, V, pi):
                     pi[s] = a
         if changed:
             n_changed += 1
-    print(f"\nActions changed: {changed}")
+    print(f"\nActions changed: {n_changed}")
     return stable, pi
 
 
@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
     try:
         with open("prets.json") as prets_file:
-            S_prets = json.load("prets_file")
+            S_prets = json.load(prets_file)
         with open("probs.json") as probs_file:
             probs = json.load(probs_file)
     except FileNotFoundError:
