@@ -58,9 +58,9 @@ def p_4(s_next, s_pret, s_pa):
 
 
 if __name__ == "__main__":
-    max_cars = argv[0]
+    max_cars = int(argv[0])
     ms = max_cars + 1
-    mm = argv[1]
+    mm = int(argv[1])
 
     S = {f"{n1}, {n2}": [n1, n2] for n1 in range(ms) for n2 in range(ms)}
     A = {f"{n1}, {n2}": [a for a in range(min(mm, 20-n2, n1)+1)] +
