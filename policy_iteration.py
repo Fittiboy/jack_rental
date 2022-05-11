@@ -1,5 +1,4 @@
 from math import factorial, exp
-import sys
 import json
 
 
@@ -47,7 +46,7 @@ def improve(S, A, p, gamma, V, pi):
                     changed += 1
                     stable = False
                     pi[s] = a
-    print(f"Actions changed: {changed}")
+    print(f"\nActions changed: {changed}")
     return stable, pi
 
 
@@ -131,7 +130,6 @@ if __name__ == "__main__":
         V = eval(S, A, probs, gamma, V, pi, 1)
         print("Policy evaluated.")
         stable, pi = improve(S, A, probs, gamma, V, pi)
-        sys.stdout.write('\033[K')
         print("Policy updated.")
 
     print(pi)
