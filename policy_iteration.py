@@ -99,9 +99,9 @@ if __name__ == "__main__":
     poissons = {str(lmbd): [poisson(lmbd, n) for n in ns] for lmbd in lmbds}
 
     try:
-        with open("prets.json") as prets_file:
+        with open(f"prets_{ms}_{mm}.json") as prets_file:
             S_prets = json.load(prets_file)
-        with open("probs.json") as probs_file:
+        with open(f"probs_{ms}_{mm}.json") as probs_file:
             probs = json.load(probs_file)
     except FileNotFoundError:
         print("Building tables")
@@ -124,9 +124,9 @@ if __name__ == "__main__":
                                                                     s_pret,
                                                                     s_pa)
                     S_prets[str(s_pa)][s_preq] = S_pret
-        with open("prets.json", "w") as prets_file:
+        with open("prets_{ms}_{mm}.json", "w") as prets_file:
             json.dump(S_prets, prets_file, indent=4)
-        with open("probs.json", "w") as probs_file:
+        with open("probs_{ms}_{mm}.json", "w") as probs_file:
             json.dump(probs, probs_file, indent=4)
         print("Tables complete")
 
