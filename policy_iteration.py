@@ -82,16 +82,20 @@ def p_4(s_next, s_pret, s_pa):
 
 
 if __name__ == "__main__":
-    S = {f"{n1}, {n2}": [n1, n2] for n1 in range(21) for n2 in range(21)}
-    A = {f"{n1}, {n2}": [a for a in range(min(5, 20-n2, n1)+1)] +
-         [-a for a in range(1, min(5, 20-n1, n2)+1)] for n1 in range(21) for n2
-         in range(21)}
+    max_cars = 20
+    ms = max_cars + 1
+    mm = 5
+
+    S = {f"{n1}, {n2}": [n1, n2] for n1 in range(ms) for n2 in range(ms)}
+    A = {f"{n1}, {n2}": [a for a in range(min(mm, 20-n2, n1)+1)] +
+         [-a for a in range(1, min(mm, 20-n1, n2)+1)] for n1 in range(ms) for
+         n2 in range(ms)}
     gamma = 0.9
 
     V, pi = initialize(S, A)
 
     lmbds = [2, 3, 4]
-    ns = [i for i in range(21)]
+    ns = [i for i in range(ms)]
     poissons = {str(lmbd): [poisson(lmbd, n) for n in ns] for lmbd in lmbds}
 
     try:
@@ -112,8 +116,8 @@ if __name__ == "__main__":
                 for s_preq in S:
                     lb0 = max(s_pa[0], S[s_preq][0])
                     lb1 = max(s_pa[1], S[s_preq][1])
-                    S_pret = [[n1, n2] for n1 in range(lb0, 21) for n2 in
-                              range(lb1, 21)]
+                    S_pret = [[n1, n2] for n1 in range(lb0, ms) for n2 in
+                              range(lb1, ms)]
                     probs[str(s_pa)][s_preq] = {}
                     for s_pret in S_pret:
                         probs[str(s_pa)][s_preq][str(s_pret)] = p_4(S[s_preq],
