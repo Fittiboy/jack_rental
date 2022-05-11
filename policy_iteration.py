@@ -83,8 +83,9 @@ def p_4(s_next, s_pret, s_pa):
 
 if __name__ == "__main__":
     S = {f"{n1}, {n2}": [n1, n2] for n1 in range(21) for n2 in range(21)}
-    A = {f"{n1}, {n2}": [a for a in range(min(5, 20-n2, n1)+1)] for n1 in
-         range(21) for n2 in range(21)}
+    A = {f"{n1}, {n2}": [a for a in range(min(5, 20-n2, n1)+1)] +
+         [-a for a in range(1, min(5, 20-n1, n2)+1)] for n1 in range(21) for n2
+         in range(21)}
     gamma = 0.9
 
     V, pi = initialize(S, A)
