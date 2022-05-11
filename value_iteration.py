@@ -48,6 +48,7 @@ def improve(S, A, p, gamma, V, pi):
             if q > best:
                 best = q
                 pi[s] = a
+    print()
     return pi
 
 
@@ -80,9 +81,9 @@ def p_4(s_next, s_pret, s_pa):
 
 
 if __name__ == "__main__":
-    max_cars = 20
+    max_cars = 10
     ms = max_cars + 1
-    mm = 5
+    mm = 3
 
     S = {f"{n1}, {n2}": [n1, n2] for n1 in range(ms) for n2 in range(ms)}
     A = {f"{n1}, {n2}": [a for a in range(min(mm, 20-n2, n1)+1)] +
