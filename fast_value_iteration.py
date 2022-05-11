@@ -1,4 +1,4 @@
-from math import factorial, exp, inf
+from math import factorial, exp
 from datetime import datetime
 import json
 
@@ -43,19 +43,6 @@ def eval(S, A, p, gamma, V, pi, d_min):
         if d < d_min:
             break
     return pi, V
-
-
-# def improve(S, A, p, gamma, V, pi):
-#     for s in S:
-#         print(f"Finding best action for state {s}  ", end='\r')
-#         best = -inf
-#         for a in A[s]:
-#             q = get_value(s, a, S, p, gamma, V)
-#             if q > best:
-#                 best = q
-#                 pi[s] = a
-#     print()
-#     return pi
 
 
 def poisson(lmbd, n):
@@ -140,9 +127,7 @@ if __name__ == "__main__":
 
     start = datetime.now()
     V, pi = eval(S, A, probs, gamma, V, pi, 0.0001)
-    print("Value iteration complete!")
-    # pi = improve(S, A, probs, gamma, V, pi)
-    # print("Policy updated.")
+    print("Fast value iteration complete!")
     runtime = datetime.now() - start
     print(f"Total runtime: {runtime}")
 
