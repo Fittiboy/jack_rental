@@ -143,3 +143,6 @@ if __name__ == "__main__":
     with open(f"vi_policy_{ms}_{mm}.json", "w") as policy_file:
         json.dump(pi, policy_file, indent=4)
     print("Policy saved.")
+    with open(f"vi_value_{ms}_{mm}.json", "w") as value_file:
+        json.dump(V, value_file, indent=4)
+    print("Values saved.")
