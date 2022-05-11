@@ -35,17 +35,20 @@ def eval(S, A, p, gamma, V, pi, d_min):
 
 def improve(S, A, p, gamma, V, pi):
     stable = True
-    changed = 0
+    n_changed = 0
     for s in S:
+        changed = False
         old = V[s]
         print(f"Finding best action for state {s}  ", end='\r')
         for a in A[s]:
             new = get_value(s, a, S, p, gamma, V)
             if new > old:
                 if pi[s] != a:
-                    changed += 1
+                    changed = True
                     stable = False
                     pi[s] = a
+        if changed:
+            n_changed += 1
     print(f"\nActions changed: {changed}")
     return stable, pi
 
