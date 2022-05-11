@@ -1,3 +1,6 @@
+from math import factorial, exp
+
+
 def initialize(S: list, A: dict):
     V = {s: 0 for s in S}
     pi = {s: A[s[0]] for s in S}
@@ -32,12 +35,44 @@ def improve(S, A, R, p, gamma, V, pi):
     return stable, pi
 
 
+def poisson(lmbd, n):
+    return ((lmbd**n) / factorial(n)) * exp(-lmbd)
+
+
+def post_return_prob(s_pret, s, a):
+    s_pa = [s[0]-a, s[0]+a]
+    if s_pret[0] < s_pa[0] or s_pret[1] < s_pa[0]:
+        return 0
+    else:
+        p = poisson(3, s_pret[0]-s_pa[0]) * poisson(2, s_pret[1]-s_pa[1])
+        return p
+
+
+def post_request_prob(s_preq, s_pret):
+    if s_preq[0] > s_pret[0] or s_preq[1] > s_pret[1]:
+        return 0
+    else:
+        p = poisson(3, s_pret[0]-s_preq[0]) * poisson(4, s_pret[1]-s_preq[1])
+        return p
+
+
+def reward_prob(r, s_preq, s_pret, a):
+    r_0 = 10 * (s_pret[0] - s_preq[0])
+    r_1 = 10 * (s_pret[1] - s_pret[1])
+    r_true = r_0 + r_1 - (2 * a)
+    return 1 if r == r_true else 0
+
+
+def p_4(S, s_next, r, s, a):
+    return sum(post_request_prob(s_next, s_pret)*post_return_prob(s_pret, s, a)
+               for s_pret in S)
+
+
 if __name__ == "__main__":
-    S = ["1", "2", "3"]
-    A = {"1": ["3", "2", "1"],
-         "2": ["3", "1", "2"],
-         "3": ["2", "1", "3"]}
-    R = [1, 2, 3]
+    S = {f"{n1}, {n2}": [n1, n2] for n1 in range(21) for n2 in range(21)}
+    A = {f"{n1}, {n2}": [a for a in range(1, min(5, 20-n2, n1)+1)] for n1 in
+         range(21) for n2 in range(21)}
+    R = list(range(-10, 401, 2))
     gamma = 0.9
 
     def p(s_next, r, s, a):
