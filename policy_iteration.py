@@ -101,11 +101,14 @@ if __name__ == "__main__":
     poissons = {str(lmbd): [poisson(lmbd, n) for n in ns] for lmbd in lmbds}
 
     try:
+        print("Trying to load tables...")
         with open(f"prets_{ms}_{mm}.json") as prets_file:
             S_prets = json.load(prets_file)
         with open(f"probs_{ms}_{mm}.json") as probs_file:
             probs = json.load(probs_file)
+        print("Tables loaded!")
     except FileNotFoundError:
+        print("No precomputed tables.")
         print("Building tables")
         S_prets = {}
         probs = {}
