@@ -1,4 +1,4 @@
-from math import factorial, exp
+from math import factorial, exp, inf
 from datetime import datetime
 import json
 
@@ -21,13 +21,18 @@ def get_value(s, a, S, p, gamma, V):
     return sum(rets)
 
 
-def eval(S, A, p, gamma, V, pi, d_min):
+def eval(S, A, p, gamma, V, d_min):
     while True:
         d = 0
         for s in S:
             print(f"Evaluating {s}  ", end='\r')
             v = V[s]
-            V[s] = get_value(s, pi[s], S, p, gamma, V)
+            old_v = v
+            for a in A[s]:
+                new_v = get_value(s, a, S, p, gamma, V)
+                if new_v > old_v:
+                    old_v = new_v
+            V[s] = new_v
             d = max(d, abs(v-V[s]))
         if d < d_min:
             break
@@ -35,25 +40,15 @@ def eval(S, A, p, gamma, V, pi, d_min):
 
 
 def improve(S, A, p, gamma, V, pi):
-    stable = True
-    n_changed = 0
     for s in S:
-        old_v = V[s]
-        old_a = pi[s]
-        new_a = old_a
         print(f"Finding best action for state {s}  ", end='\r')
+        best = -inf
         for a in A[s]:
-            new_v = get_value(s, a, S, p, gamma, V)
-            if new_v > old_v:
-                old_v = new_v
-                if pi[s] != a:
-                    new_a = a
-        if new_a != old_a:
-            n_changed += 1
-            stable = False
-            pi[s] = new_a
-    print(f"\nActions changed: {n_changed}")
-    return stable, pi
+            q = get_value(s, a, S, p, gamma, V)
+            if q > best:
+                best = q
+                pi[s] = a
+    return pi
 
 
 def poisson(lmbd, n):
@@ -137,18 +132,13 @@ if __name__ == "__main__":
         print("Tables complete")
 
     start = datetime.now()
-    stable = False
-    i = 0
-    while not stable:
-        i += 1
-        print(f"Step: {i}")
-        V = eval(S, A, probs, gamma, V, pi, 0.0001)
-        print("Policy evaluated.")
-        stable, pi = improve(S, A, probs, gamma, V, pi)
-        print("Policy updated.")
+    V = eval(S, A, probs, gamma, V, 0.0001)
+    print("Value iteration complete!")
+    pi = improve(S, A, probs, gamma, V, pi)
+    print("Policy updated.")
     runtime = datetime.now() - start
     print(f"Total runtime: {runtime}")
 
-    with open(f"policy_{ms}_{mm}.json", "w") as policy_file:
+    with open(f"vi_policy_{ms}_{mm}.json", "w") as policy_file:
         json.dump(pi, policy_file, indent=4)
     print("Policy saved.")
