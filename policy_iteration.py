@@ -1,4 +1,6 @@
 from math import factorial, exp
+import sys
+import json
 
 
 def initialize(S: dict, A: dict):
@@ -34,6 +36,7 @@ def eval(S, A, p, gamma, V, pi, d_min):
 
 def improve(S, A, p, gamma, V, pi):
     stable = True
+    changed = 0
     for s in S:
         old = V[s]
         print(f"Finding best action for state {s}  ", end='\r')
@@ -41,8 +44,10 @@ def improve(S, A, p, gamma, V, pi):
             new = get_value(s, a, S, p, gamma, V)
             if new > old:
                 if pi[s] != a:
+                    changed += 1
                     stable = False
                     pi[s] = a
+    print(f"Actions changed: {changed}")
     return stable, pi
 
 
@@ -86,36 +91,47 @@ if __name__ == "__main__":
     ns = [i for i in range(21)]
     poissons = {str(lmbd): [poisson(lmbd, n) for n in ns] for lmbd in lmbds}
 
-    print("Building tables")
-    S_prets = {}
-    probs = {}
-    for s in S:
-        print(f"State: {s}  ", end='\r')
-        for a in A[s]:
-            s_pa = [S[s][0]-a, S[s][1]+a]
-            S_prets[str(s_pa)] = {}
-            probs[str(s_pa)] = {}
-            for s_preq in S:
-                lb0 = max(s_pa[0], S[s_preq][0])
-                lb1 = max(s_pa[1], S[s_preq][1])
-                S_pret = [[n1, n2] for n1 in range(lb0, 21) for n2 in
-                          range(lb1, 21)]
-                probs[str(s_pa)][s_preq] = {}
-                for s_pret in S_pret:
-                    probs[str(s_pa)][s_preq][str(s_pret)] = p_4(S[s_preq],
-                                                                s_pret,
-                                                                s_pa)
-                S_prets[str(s_pa)][s_preq] = S_pret
-    print("Tables complete")
+    try:
+        with open("prets.json") as prets_file:
+            S_prets = json.load("prets_file")
+        with open("probs.json") as probs_file:
+            probs = json.load(probs_file)
+    except FileNotFoundError:
+        print("Building tables")
+        S_prets = {}
+        probs = {}
+        for s in S:
+            print(f"State: {s}  ", end='\r')
+            for a in A[s]:
+                s_pa = [S[s][0]-a, S[s][1]+a]
+                S_prets[str(s_pa)] = {}
+                probs[str(s_pa)] = {}
+                for s_preq in S:
+                    lb0 = max(s_pa[0], S[s_preq][0])
+                    lb1 = max(s_pa[1], S[s_preq][1])
+                    S_pret = [[n1, n2] for n1 in range(lb0, 21) for n2 in
+                              range(lb1, 21)]
+                    probs[str(s_pa)][s_preq] = {}
+                    for s_pret in S_pret:
+                        probs[str(s_pa)][s_preq][str(s_pret)] = p_4(S[s_preq],
+                                                                    s_pret,
+                                                                    s_pa)
+                    S_prets[str(s_pa)][s_preq] = S_pret
+        with open("prets.json", "w") as prets_file:
+            json.dump(S_prets, prets_file, indent=4)
+        with open("probs.json", "w") as probs_file:
+            json.dump(probs, probs_file, indent=4)
+        print("Tables complete")
 
     stable = False
     i = 0
     while not stable:
         i += 1
         print(f"Step: {i}")
-        V = eval(S, A, probs, gamma, V, pi, 0.1)
+        V = eval(S, A, probs, gamma, V, pi, 1)
         print("Policy evaluated.")
         stable, pi = improve(S, A, probs, gamma, V, pi)
+        sys.stdout.write('\033[K')
         print("Policy updated.")
 
     print(pi)
