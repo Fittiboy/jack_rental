@@ -40,7 +40,6 @@ def improve(S, A, p, gamma, V, pi):
         for a in A[s]:
             new = get_value(s, a, S, p, gamma, V)
             if new > old:
-                V[s] = new
                 if pi[s] != a:
                     stable = False
                     pi[s] = a
