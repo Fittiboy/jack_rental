@@ -21,8 +21,9 @@ def get_value(s, a, S, p, gamma, V):
     return sum(rets)
 
 
-def eval(S, A, p, gamma, V, d_min):
+def eval(S, A, p, gamma, V, pi, d_min):
     while True:
+        stable = True
         d = 0
         for s in S:
             print(f"Evaluating {s}  ", end='\r')
@@ -32,24 +33,29 @@ def eval(S, A, p, gamma, V, d_min):
                 new_v = get_value(s, a, S, p, gamma, V)
                 if new_v > old_v:
                     old_v = new_v
+                    if a != pi[s]:
+                        stable = False
+                        pi[s] = a
             V[s] = new_v
             d = max(d, abs(v-V[s]))
+        if stable:
+            break
         if d < d_min:
             break
-    return V
+    return pi, V
 
 
-def improve(S, A, p, gamma, V, pi):
-    for s in S:
-        print(f"Finding best action for state {s}  ", end='\r')
-        best = -inf
-        for a in A[s]:
-            q = get_value(s, a, S, p, gamma, V)
-            if q > best:
-                best = q
-                pi[s] = a
-    print()
-    return pi
+# def improve(S, A, p, gamma, V, pi):
+#     for s in S:
+#         print(f"Finding best action for state {s}  ", end='\r')
+#         best = -inf
+#         for a in A[s]:
+#             q = get_value(s, a, S, p, gamma, V)
+#             if q > best:
+#                 best = q
+#                 pi[s] = a
+#     print()
+#     return pi
 
 
 def poisson(lmbd, n):
@@ -133,13 +139,13 @@ if __name__ == "__main__":
         print("Tables complete")
 
     start = datetime.now()
-    V = eval(S, A, probs, gamma, V, 0.0001)
+    V, pi = eval(S, A, probs, gamma, V, pi, 0.0001)
     print("Value iteration complete!")
-    pi = improve(S, A, probs, gamma, V, pi)
-    print("Policy updated.")
+    # pi = improve(S, A, probs, gamma, V, pi)
+    # print("Policy updated.")
     runtime = datetime.now() - start
     print(f"Total runtime: {runtime}")
 
-    with open(f"vi_policy_{ms}_{mm}.json", "w") as policy_file:
+    with open(f"f_vi_policy_{ms}_{mm}.json", "w") as policy_file:
         json.dump(pi, policy_file, indent=4)
     print("Policy saved.")
