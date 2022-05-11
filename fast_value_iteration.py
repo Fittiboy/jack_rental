@@ -126,7 +126,7 @@ if __name__ == "__main__":
         print("Tables complete")
 
     start = datetime.now()
-    V, pi = eval(S, A, probs, gamma, V, pi, 0.0001)
+    pi, V = eval(S, A, probs, gamma, V, pi, 0.0001)
     print("Fast value iteration complete!")
     runtime = datetime.now() - start
     print(f"Total runtime: {runtime}")
