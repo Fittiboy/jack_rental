@@ -1,1 +1,1 @@
-If you can read this, please contact me at [stopbeinglazy@fitti.io](mailto:stopbeinglazy@fitti.io) and tell me to stop being lazy! :)
+If you can read this, please contact me at [stopbeinglazy@fitti.io](mailto:stopbeinglazy@fitti.io?subject=Stop%20being%20lazy%20and%20finish%20the%20work%20that%20you%20started%20please!&body=The%20subject%20should%20be%20fairly%20clear.%0AHave%20a%20good%20day!) and tell me to stop being lazy! :)
