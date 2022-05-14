@@ -1,4 +1,4 @@
-from math import factorial, exp, inf
+from math import factorial, exp
 import matplotlib.pyplot as plt
 from itertools import product
 from datetime import datetime
