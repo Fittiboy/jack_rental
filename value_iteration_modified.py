@@ -142,7 +142,7 @@ if __name__ == "__main__":
     print("Tables complete")
 
     start = datetime.now()
-    eval(0.0001)
+    eval(0.01)
     print("Value iteration complete!")
     improve()
     print("Policy updated.")
