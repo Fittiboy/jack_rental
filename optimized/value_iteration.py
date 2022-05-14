@@ -1,39 +1,43 @@
 from math import factorial, exp, inf
 from datetime import datetime
+import numpy as np
 import json
 
 
 def initialize(S: dict, A: dict):
-    V = {s: 0 for s in S}
-    pi = {s: A[s][0] for s in S}
+    V = np.zeros((21, 21), dtype=np.float32)
+    pi = np.zeros((21, 21), dtype=np.int)
     return V, pi
 
 
 def get_value(s, a, S, p, gamma, V):
-    rets = []
-    s_pa = [S[s][0]-a, S[s][1]+a]
+    rets = 0
+    n1, n2 = S[s]
+    s_pa = [n1-a, n2+a]
     for s_preq in S:
+        local_probs = p[str(s_pa)][s_preq]
+        r = get_reward(S[s_preq], s_pa, a)
         for s_pret in S_prets[str(s_pa)][s_preq]:
-            r = get_reward(S[s_preq], s_pret, a)
-            prob = probs[str(s_pa)][s_preq][str(s_pret)]
-            ret = r+gamma*V[s_preq]
-            rets.append(prob*ret)
-    return sum(rets)
+            prob = local_probs[str(s_pret)]
+            ret = r+gamma*V[s_pret[0]][s_pret[1]]
+            rets += prob*ret
+    return rets
 
 
 def eval(S, A, p, gamma, V, d_min):
     while True:
         d = 0
         for s in S:
+            n1, n2 = S[s]
             print(f"Evaluating {s}  ", end='\r')
-            v = V[s]
+            v = V[n1][n2]
             old_v = v
             for a in A[s]:
                 new_v = get_value(s, a, S, p, gamma, V)
                 if new_v > old_v:
                     old_v = new_v
-            V[s] = new_v
-            d = max(d, abs(v-V[s]))
+            V[n1][n2] = new_v
+            d = max(d, abs(v-V[n1][n2]))
         if d < d_min:
             break
     return V
@@ -41,13 +45,14 @@ def eval(S, A, p, gamma, V, d_min):
 
 def improve(S, A, p, gamma, V, pi):
     for s in S:
+        n1, n2 = S[s]
         print(f"Finding best action for state {s}  ", end='\r')
         best = -inf
         for a in A[s]:
             q = get_value(s, a, S, p, gamma, V)
             if q > best:
                 best = q
-                pi[s] = a
+                pi[n1][n2] = a
     print()
     return pi
 
@@ -116,16 +121,16 @@ if __name__ == "__main__":
     mm = 3
 
     S = {f"{n1}, {n2}": [n1, n2] for n1 in range(ms) for n2 in range(ms)}
-    A = {f"{n1}, {n2}": [a for a in range(min(mm, max_cars-n2, n1)+1)] +
-         [-a for a in range(1, min(mm, max_cars-n1, n2)+1)] for n1 in range(ms)
-         for n2 in range(ms)}
+    A = {f"{n1}, {n2}": list(range(-min(mm, max_cars-n1, n2),
+                                   min(mm, max_cars-n2, n1)+1))
+         for n1 in range(ms) for n2 in range(ms)}
     gamma = 0.9
 
     V, pi = initialize(S, A)
 
     lmbds = [2, 3, 4]
-    ns = [i for i in range(ms)]
-    poissons = {str(lmbd): [poisson(lmbd, n) for n in ns] for lmbd in lmbds}
+    poissons = {str(lmbd): [poisson(lmbd, n) for n in range(ms)]
+                for lmbd in lmbds}
 
     try:
         print("Trying to load tables...")
@@ -140,16 +145,17 @@ if __name__ == "__main__":
         S_prets = {}
         probs = {}
         for s in S:
+            n1, n2 = S[s]
             print(f"State: {s}  ", end='\r')
             for a in A[s]:
-                s_pa = [S[s][0]-a, S[s][1]+a]
+                s_pa = [n1-a, n2+a]
                 S_prets[str(s_pa)] = {}
                 probs[str(s_pa)] = {}
                 for s_preq in S:
                     lb0 = max(s_pa[0], S[s_preq][0])
                     lb1 = max(s_pa[1], S[s_preq][1])
-                    S_pret = [[n1, n2] for n1 in range(lb0, ms) for n2 in
-                              range(lb1, ms)]
+                    S_pret = [[pret1, pret2] for pret1 in range(lb0, ms)
+                              for pret2 in range(lb1, ms)]
                     probs[str(s_pa)][s_preq] = {}
                     for s_pret in S_pret:
                         probs[str(s_pa)][s_preq][str(s_pret)] = p_4(S[s_preq],
