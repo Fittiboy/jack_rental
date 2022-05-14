@@ -10,7 +10,11 @@ import json
 def get_value(g1, g2, a):
     gpa1, gpa2 = [g1-a, g2+a]
     aprobs = probs[gpa1, gpa2, :, :]
-    r = rewards[gpa1, gpa2] - 2 * abs(a)
+    if a > 0:
+        mv_cost = 2 * (a - 1)
+    else:
+        mv_cost = -2 * a
+    r = rewards[gpa1, gpa2] - mv_cost
     return r + gamma * (V * aprobs).sum()
 
 
@@ -135,6 +139,10 @@ if __name__ == "__main__":
             for pret1, pret2 in product(S_prets[preq1], S_prets[preq2]):
                 p_pret = post_return_prob([pret1, pret2], [preq1, preq2])
                 probs[n1, n2, pret1, pret2] += p_pret * p_preq
+                if pret1 > 10:
+                    rewards[n1, n2] -= 4 * p_pret * p_preq
+                if pret2 > 10:
+                    rewards[n1, n2] -= 4 * p_pret * p_preq
     print("Tables complete")
 
     start = datetime.now()
