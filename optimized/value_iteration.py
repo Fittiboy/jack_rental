@@ -109,9 +109,9 @@ def get_reward(s_preq, s_pa, a):
     return r_0 + r_1 - (2 * a)
 
 
-def p_4(s_next, s_pret, s_pa):
-    preq = post_request_prob(s_next, s_pret)
-    pret = post_return_prob(s_pret, s_pa)
+def p_4(s_pret, s_preq, s_pa):
+    preq = post_request_prob(s_preq, s_pa)
+    pret = post_return_prob(s_pret, s_preq)
     return preq*pret
 
 
@@ -158,8 +158,8 @@ if __name__ == "__main__":
                               for pret2 in range(lb1, ms)]
                     probs[str(s_pa)][s_preq] = {}
                     for s_pret in S_pret:
-                        probs[str(s_pa)][s_preq][str(s_pret)] = p_4(S[s_preq],
-                                                                    s_pret,
+                        probs[str(s_pa)][s_preq][str(s_pret)] = p_4(s_pret,
+                                                                    S[s_preq],
                                                                     s_pa)
                     S_prets[str(s_pa)][s_preq] = S_pret
         with open(f"prets_{ms}_{mm}.json", "w") as prets_file:
