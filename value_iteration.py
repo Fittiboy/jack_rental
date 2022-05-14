@@ -101,7 +101,7 @@ def post_request_prob(s_preq, s_pret):
 def get_reward(s_preq, s_pa, a):
     r_0 = 10 * (s_pa[0] - s_preq[0])
     r_1 = 10 * (s_pa[1] - s_preq[1])
-    return r_0 + r_1 - (2 * a)
+    return r_0 + r_1 - (2 * abs(a))
 
 
 def p_4(s_next, s_pret, s_pa):
@@ -111,9 +111,9 @@ def p_4(s_next, s_pret, s_pa):
 
 
 if __name__ == "__main__":
-    max_cars = 10
+    max_cars = 8
     ms = max_cars + 1
-    mm = 3
+    mm = 2
 
     S = {f"{n1}, {n2}": [n1, n2] for n1 in range(ms) for n2 in range(ms)}
     A = {f"{n1}, {n2}": [a for a in range(min(mm, max_cars-n2, n1)+1)] +

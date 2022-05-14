@@ -106,7 +106,7 @@ def post_request_prob(s_preq, s_pret):
 def get_reward(s_preq, s_pa, a):
     r_0 = 10 * (s_pa[0] - s_preq[0])
     r_1 = 10 * (s_pa[1] - s_preq[1])
-    return r_0 + r_1 - (2 * a)
+    return r_0 + r_1 - (2 * abs(a))
 
 
 def p_4(s_pret, s_preq, s_pa):
@@ -116,14 +116,15 @@ def p_4(s_pret, s_preq, s_pa):
 
 
 if __name__ == "__main__":
-    max_cars = 10
+    max_cars = 8
     ms = max_cars + 1
-    mm = 3
+    mm = 2
 
     S = {f"{n1}, {n2}": [n1, n2] for n1 in range(ms) for n2 in range(ms)}
     A = {f"{n1}, {n2}": list(range(-min(mm, max_cars-n1, n2),
                                    min(mm, max_cars-n2, n1)+1))
          for n1 in range(ms) for n2 in range(ms)}
+    print(A)
     gamma = 0.9
 
     V, pi = initialize(S, A)
@@ -177,8 +178,12 @@ if __name__ == "__main__":
     print(f"Total runtime: {runtime}")
 
     with open(f"vi_policy_{ms}_{mm}.json", "w") as policy_file:
-        json.dump(pi, policy_file, indent=4)
+        pi_json = {f"{n1}, {n2}": int(pi[n1][n2]) for n1 in range(ms)
+                   for n2 in range(ms)}
+        json.dump(pi_json, policy_file, indent=4)
     print("Policy saved.")
     with open(f"vi_value_{ms}_{mm}.json", "w") as value_file:
-        json.dump(V, value_file, indent=4)
+        V_json = {f"{n1}, {n2}": int(V[n1][n2]) for n1 in range(ms)
+                   for n2 in range(ms)}
+        json.dump(V_json, value_file, indent=4)
     print("Values saved.")
