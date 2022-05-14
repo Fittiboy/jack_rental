@@ -14,14 +14,14 @@ def get_value(s, a, S, p, gamma, V):
     rets = 0
     n1, n2 = S[s]
     s_pa = str([n1-a, n2+a])
+    r = rewards[s_pa] - 2 * abs(a)
     for s_preq in S_preqs[s_pa]:
         local_probs = p[s_pa][s_preq]
-        r = get_reward(S[s_preq], S[s_pa], a)
         for s_pret in S_prets[s_preq]:
             prob = local_probs[s_pret]
-            ret = r+gamma*V[S[s_pret][0]][S[s_pret][1]]
+            ret = gamma * V[S[s_pret][0]][S[s_pret][1]]
             rets += prob*ret
-    return rets
+    return r + rets
 
 
 def eval(S, A, p, gamma, V, d_min):
@@ -103,10 +103,10 @@ def post_request_prob(s_preq, s_pret):
     return p
 
 
-def get_reward(s_preq, s_pa, a):
+def get_reward(s_preq, s_pa):
     r_0 = 10 * (s_pa[0] - s_preq[0])
     r_1 = 10 * (s_pa[1] - s_preq[1])
-    return r_0 + r_1 - (2 * abs(a))
+    return r_0 + r_1
 
 
 def p_4(s_pret, s_preq, s_pa):
@@ -140,6 +140,8 @@ if __name__ == "__main__":
             S_preqs = json.load(preqs_file)
         with open(f"probs_{ms}_{mm}.json") as probs_file:
             probs = json.load(probs_file)
+        with open(f"rewards_{ms}_{mm}.json") as rewards_file:
+            rewards = json.load(rewards_file)
         print("Tables loaded!")
     except FileNotFoundError:
         print("No precomputed tables.")
@@ -147,6 +149,7 @@ if __name__ == "__main__":
         S_prets = {}
         S_preqs = {}
         probs = {}
+        rewards = {}
         for s in S:
             b0, b1 = S[s]
             S_pret = [str([pret1, pret2]) for pret1 in range(b0, ms)
@@ -158,22 +161,26 @@ if __name__ == "__main__":
         for s_pa in S:
             print(f"State: {s_pa}  ", end='\r')
             probs[s_pa] = {}
+            rewards[s_pa] = 0
             for s_preq in S_preqs[s_pa]:
                 probs[s_pa][s_preq] = {}
+                preq = post_request_prob(s_preq, s_pa)
+                rewards[s_pa] += preq * get_reward(s_preq, s_pa)
                 for s_pret in S_prets[s_preq]:
-                    probs[s_pa][s_preq][s_pret] = p_4(S[s_pret],
-                                                      S[s_preq],
-                                                      S[s_pa])
+                    pret = post_return_prob(s_pret, s_preq)
+                    probs[s_pa][s_preq][s_pret] = pret * preq
         with open(f"prets_{ms}_{mm}.json", "w") as prets_file:
             json.dump(S_prets, prets_file, indent=4)
         with open(f"preqs_{ms}_{mm}.json", "w") as preqs_file:
             json.dump(S_preqs, preqs_file, indent=4)
         with open(f"probs_{ms}_{mm}.json", "w") as probs_file:
             json.dump(probs, probs_file, indent=4)
+        with open(f"rewards_{ms}_{mm}.json", "w") as rewards_file:
+            json.dump(rewards, rewards_file, indent=4)
         print("Tables complete")
 
     start = datetime.now()
-    V = eval(S, A, probs, gamma, V, 0.0001)
+    V = eval(S, A, probs, gamma, V, 0.01)
     print("Value iteration complete!")
     pi = improve(S, A, probs, gamma, V, pi)
     print("Policy updated.")
