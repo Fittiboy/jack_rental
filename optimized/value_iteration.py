@@ -149,7 +149,6 @@ if __name__ == "__main__":
         probs = {}
         for s in S:
             b0, b1 = S[s]
-            print(f"State: {s}  ", end='\r')
             S_pret = [str([pret1, pret2]) for pret1 in range(b0, ms)
                       for pret2 in range(b1, ms)]
             S_preq = [str([preq1, preq2]) for preq1 in range(b0+1)
@@ -157,6 +156,7 @@ if __name__ == "__main__":
             S_prets[s] = S_pret
             S_preqs[s] = S_preq
         for s_pa in S:
+            print(f"State: {s_pa}  ", end='\r')
             probs[s_pa] = {}
             for s_preq in S_preqs[s_pa]:
                 probs[s_pa][s_preq] = {}
