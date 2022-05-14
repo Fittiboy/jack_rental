@@ -160,3 +160,5 @@ if __name__ == "__main__":
     plt.ylim(reversed(plt.ylim()))
     sns.heatmap(pi).invert_yaxis()
     plt.show()
+    sns.heatmap(V).invert_yaxis()
+    plt.show()
