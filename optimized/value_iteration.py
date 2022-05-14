@@ -1,68 +1,51 @@
 from math import factorial, exp, inf
+import matplotlib.pyplot as plt
+from itertools import product
 from datetime import datetime
+import seaborn as sns
+import pandas as pd
 import numpy as np
 import json
 
 
-def initialize(S: dict, A: dict):
-    V = np.zeros((21, 21), dtype=np.float64)
-    pi = np.zeros((21, 21), dtype=np.int)
-    return V, pi
+def get_value(g1, g2, a):
+    gpa1, gpa2 = [g1-a, g2+a]
+    aprobs = probs[gpa1, gpa2, :, :]
+    r = rewards[gpa1, gpa2] - 2 * abs(a)
+    return r + gamma * (V * aprobs).sum()
 
 
-def get_value(s, a, S, p, gamma, V):
-    rets = 0
-    n1, n2 = S[s]
-    s_pa = str([n1-a, n2+a])
-    r = rewards[s_pa] - 2 * abs(a)
-    for s_preq in S_preqs[s_pa]:
-        local_probs = p[s_pa][s_preq]
-        for s_pret in S_prets[s_preq]:
-            prob = local_probs[s_pret]
-            ret = gamma * V[S[s_pret][0]][S[s_pret][1]]
-            rets += prob*ret
-    return r + rets
-
-
-def eval(S, A, p, gamma, V, d_min):
+def eval(d_min):
     while True:
         d = 0
-        for s in S:
-            n1, n2 = S[s]
-            print(f"Evaluating {s}  ", end='\r')
-            v = V[n1][n2]
-            old_v = v
-            for a in A[s]:
-                new_v = get_value(s, a, S, p, gamma, V)
-                if new_v > old_v:
-                    old_v = new_v
-            V[n1][n2] = new_v
-            d = max(d, abs(v-V[n1][n2]))
+        for e1, e2 in product(range(ms), range(ms)):
+            ov = V[e1, e2]
+            vs = [get_value(e1, e2, ea) for ea in A[e1, e2]]
+            V[e1, e2] = max(vs)
+            d = max(d, abs(ov-V[e1, e2]))
+        print(f"delta: {d:.9f}\t", end='\r')
         if d < d_min:
             break
-    return V
 
 
-def improve(S, A, p, gamma, V, pi):
-    for s in S:
-        n1, n2 = S[s]
-        print(f"Finding best action for state {s}  ", end='\r')
+def improve():
+    for i1, i2 in product(range(ms), range(ms)):
+        print(f"Finding best action for state [{n1}, {n2}]  ", end='\r')
         best = -inf
-        for a in A[s]:
-            q = get_value(s, a, S, p, gamma, V)
-            if q > best:
-                best = q
-                pi[n1][n2] = a
+        for ia in A[i1, i2]:
+            iq = get_value(i1, i2, ia)
+            if iq > best:
+                best = iq
+                pi[i1, i2] = ia
     print()
-    return pi
 
 
 def poisson(lmbd, n):
     return ((lmbd**n) / factorial(n)) * exp(-lmbd)
 
 
-def post_return_prob(s_pret, s_pa):
-    d_first = s_pret[0]-s_pa[0]
+def post_return_prob(s_pret, s_preq):
+    d_first = s_pret[0]-s_preq[0]
     if s_pret[0] == max_cars:
         if d_first == 0:
             p_first = 1
@@ -70,7 +53,7 @@ def post_return_prob(s_pret, s_pa):
             p_first = 1 - sum(poissons["3"][i] for i in range(d_first))
     else:
         p_first = poissons["3"][d_first]
-    d_second = s_pret[1]-s_pa[1]
+    d_second = s_pret[1]-s_preq[1]
     if s_pret[1] == max_cars:
         if d_second == 0:
             p_second = 1
@@ -82,8 +65,8 @@ def post_return_prob(s_pret, s_pa):
     return p
 
 
-def post_request_prob(s_preq, s_pret):
-    d_first = s_pret[0]-s_preq[0]
+def post_request_prob(s_preq, s_pa):
+    d_first = s_pa[0]-s_preq[0]
     if s_preq[0] == 0:
         if d_first == 0:
             p_first = 1
@@ -91,7 +74,7 @@ def post_request_prob(s_preq, s_pret):
             p_first = 1 - sum(poissons["3"][i] for i in range(d_first))
     else:
         p_first = poissons["3"][d_first]
-    d_second = s_pret[1]-s_preq[1]
+    d_second = s_pa[1]-s_preq[1]
     if s_preq[1] == 0:
         if d_second == 0:
             p_second = 1
@@ -116,73 +99,49 @@ def p_4(s_pret, s_preq, s_pa):
 
 
 if __name__ == "__main__":
+    gamma = 0.9
     max_cars = 20
     ms = max_cars + 1
     mm = 5
 
-    S = {str([n1, n2]): [n1, n2] for n1 in range(ms) for n2 in range(ms)}
-    A = {str([n1, n2]): list(range(-min(mm, max_cars-n1, n2),
-                                   min(mm, max_cars-n2, n1)+1))
-         for n1 in range(ms) for n2 in range(ms)}
-    gamma = 0.9
-
-    V, pi = initialize(S, A)
+    A = np.zeros((ms, ms), dtype=object)
+    V = np.zeros((ms, ms), dtype=np.float64)
+    pi = np.zeros((ms, ms), dtype=np.int)
+    for n1, n2 in product(range(ms), range(ms)):
+        A[n1][n2] = list(range(-min(mm, max_cars-n1, n2),
+                               min(mm, max_cars-n2, n1)+1))
 
     lmbds = [2, 3, 4]
     poissons = {str(lmbd): [poisson(lmbd, n) for n in range(ms)]
                 for lmbd in lmbds}
 
-    try:
-        print("Trying to load tables...")
-        with open(f"prets_{ms}_{mm}.json") as prets_file:
-            S_prets = json.load(prets_file)
-        with open(f"preqs_{ms}_{mm}.json") as preqs_file:
-            S_preqs = json.load(preqs_file)
-        with open(f"probs_{ms}_{mm}.json") as probs_file:
-            probs = json.load(probs_file)
-        with open(f"rewards_{ms}_{mm}.json") as rewards_file:
-            rewards = json.load(rewards_file)
-        print("Tables loaded!")
-    except FileNotFoundError:
-        print("No precomputed tables.")
-        print("Building tables")
-        S_prets = {}
-        S_preqs = {}
-        probs = {}
-        rewards = {}
-        for s in S:
-            b0, b1 = S[s]
-            S_pret = [str([pret1, pret2]) for pret1 in range(b0, ms)
-                      for pret2 in range(b1, ms)]
-            S_preq = [str([preq1, preq2]) for preq1 in range(b0+1)
-                      for preq2 in range(b1+1)]
-            S_prets[s] = S_pret
-            S_preqs[s] = S_preq
-        for s_pa in S:
-            print(f"State: {s_pa}  ", end='\r')
-            probs[s_pa] = {}
-            rewards[s_pa] = 0
-            for s_preq in S_preqs[s_pa]:
-                probs[s_pa][s_preq] = {}
-                preq = post_request_prob(s_preq, s_pa)
-                rewards[s_pa] += preq * get_reward(s_preq, s_pa)
-                for s_pret in S_prets[s_preq]:
-                    pret = post_return_prob(s_pret, s_preq)
-                    probs[s_pa][s_preq][s_pret] = pret * preq
-        with open(f"prets_{ms}_{mm}.json", "w") as prets_file:
-            json.dump(S_prets, prets_file, indent=4)
-        with open(f"preqs_{ms}_{mm}.json", "w") as preqs_file:
-            json.dump(S_preqs, preqs_file, indent=4)
-        with open(f"probs_{ms}_{mm}.json", "w") as probs_file:
-            json.dump(probs, probs_file, indent=4)
-        with open(f"rewards_{ms}_{mm}.json", "w") as rewards_file:
-            json.dump(rewards, rewards_file, indent=4)
-        print("Tables complete")
+    print("Building tables")
+    S_prets = np.zeros((21,), dtype=object)
+    S_preqs = np.zeros((21,), dtype=object)
+    for b in range(ms):
+        S_pret = list(range(b, ms))
+        S_preq = list(range(b+1))
+        S_prets[b] = S_pret
+        S_preqs[b] = S_preq
+
+    probs = np.zeros((ms, ms, ms, ms))
+    rewards = np.zeros((ms, ms))
+    for n1, n2 in product(range(ms), range(ms)):
+        print(f"State: [{n1}, {n2}]  ", end='\r')
+        rewards[n1, n2] = 0
+        for preq1, preq2 in product(S_preqs[n1], S_preqs[n2]):
+            p_preq = post_request_prob([preq1, preq2], [n1, n2])
+            rewards[n1][n2] += p_preq * get_reward([preq1, preq2],
+                                                   [n1, n2])
+            for pret1, pret2 in product(S_prets[preq1], S_prets[preq2]):
+                p_pret = post_return_prob([pret1, pret2], [preq1, preq2])
+                probs[n1][n2][pret1][pret2] += p_pret * p_preq
+    print("Tables complete")
 
     start = datetime.now()
-    V = eval(S, A, probs, gamma, V, 0.01)
+    eval(0.0001)
     print("Value iteration complete!")
-    pi = improve(S, A, probs, gamma, V, pi)
+    improve()
     print("Policy updated.")
     runtime = datetime.now() - start
     print(f"Total runtime: {runtime}")
@@ -197,3 +156,7 @@ if __name__ == "__main__":
                   for n2 in range(ms)}
         json.dump(V_json, value_file, indent=4)
     print("Values saved.")
+
+    plt.ylim(reversed(plt.ylim()))
+    sns.heatmap(pi).invert_yaxis()
+    plt.show()
