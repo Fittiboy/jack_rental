@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     A = np.zeros((ms, ms), dtype=object)
     V = np.zeros((ms, ms), dtype=np.float64)
-    pi = np.zeros((ms, ms), dtype=np.int)
+    pi = np.zeros((ms, ms), dtype=int)
     for n1, n2 in product(range(ms), range(ms)):
         A[n1, n2] = list(range(-min(mm, max_cars-n1, n2),
                                min(mm, max_cars-n2, n1)+1))
