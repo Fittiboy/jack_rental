@@ -5,7 +5,7 @@ import json
 
 
 def initialize(S: dict, A: dict):
-    V = np.zeros((21, 21), dtype=np.float32)
+    V = np.zeros((21, 21), dtype=np.float64)
     pi = np.zeros((21, 21), dtype=np.int)
     return V, pi
 
@@ -13,13 +13,13 @@ def initialize(S: dict, A: dict):
 def get_value(s, a, S, p, gamma, V):
     rets = 0
     n1, n2 = S[s]
-    s_pa = [n1-a, n2+a]
-    for s_preq in S:
-        local_probs = p[str(s_pa)][s_preq]
-        r = get_reward(S[s_preq], s_pa, a)
-        for s_pret in S_prets[str(s_pa)][s_preq]:
-            prob = local_probs[str(s_pret)]
-            ret = r+gamma*V[s_pret[0]][s_pret[1]]
+    s_pa = str([n1-a, n2+a])
+    for s_preq in S_preqs[s_pa]:
+        local_probs = p[s_pa][s_preq]
+        r = get_reward(S[s_preq], S[s_pa], a)
+        for s_pret in S_prets[s_preq]:
+            prob = local_probs[s_pret]
+            ret = r+gamma*V[S[s_pret][0]][S[s_pret][1]]
             rets += prob*ret
     return rets
 
@@ -116,15 +116,14 @@ def p_4(s_pret, s_preq, s_pa):
 
 
 if __name__ == "__main__":
-    max_cars = 8
+    max_cars = 20
     ms = max_cars + 1
-    mm = 2
+    mm = 5
 
-    S = {f"{n1}, {n2}": [n1, n2] for n1 in range(ms) for n2 in range(ms)}
-    A = {f"{n1}, {n2}": list(range(-min(mm, max_cars-n1, n2),
+    S = {str([n1, n2]): [n1, n2] for n1 in range(ms) for n2 in range(ms)}
+    A = {str([n1, n2]): list(range(-min(mm, max_cars-n1, n2),
                                    min(mm, max_cars-n2, n1)+1))
          for n1 in range(ms) for n2 in range(ms)}
-    print(A)
     gamma = 0.9
 
     V, pi = initialize(S, A)
@@ -137,6 +136,8 @@ if __name__ == "__main__":
         print("Trying to load tables...")
         with open(f"prets_{ms}_{mm}.json") as prets_file:
             S_prets = json.load(prets_file)
+        with open(f"preqs_{ms}_{mm}.json") as preqs_file:
+            S_preqs = json.load(preqs_file)
         with open(f"probs_{ms}_{mm}.json") as probs_file:
             probs = json.load(probs_file)
         print("Tables loaded!")
@@ -144,27 +145,29 @@ if __name__ == "__main__":
         print("No precomputed tables.")
         print("Building tables")
         S_prets = {}
+        S_preqs = {}
         probs = {}
         for s in S:
-            n1, n2 = S[s]
+            b0, b1 = S[s]
             print(f"State: {s}  ", end='\r')
-            for a in A[s]:
-                s_pa = [n1-a, n2+a]
-                S_prets[str(s_pa)] = {}
-                probs[str(s_pa)] = {}
-                for s_preq in S:
-                    lb0 = max(s_pa[0], S[s_preq][0])
-                    lb1 = max(s_pa[1], S[s_preq][1])
-                    S_pret = [[pret1, pret2] for pret1 in range(lb0, ms)
-                              for pret2 in range(lb1, ms)]
-                    probs[str(s_pa)][s_preq] = {}
-                    for s_pret in S_pret:
-                        probs[str(s_pa)][s_preq][str(s_pret)] = p_4(s_pret,
-                                                                    S[s_preq],
-                                                                    s_pa)
-                    S_prets[str(s_pa)][s_preq] = S_pret
+            S_pret = [str([pret1, pret2]) for pret1 in range(b0, ms)
+                      for pret2 in range(b1, ms)]
+            S_preq = [str([preq1, preq2]) for preq1 in range(b0+1)
+                      for preq2 in range(b1+1)]
+            S_prets[s] = S_pret
+            S_preqs[s] = S_preq
+        for s_pa in S:
+            probs[s_pa] = {}
+            for s_preq in S_preqs[s_pa]:
+                probs[s_pa][s_preq] = {}
+                for s_pret in S_prets[s_preq]:
+                    probs[s_pa][s_preq][s_pret] = p_4(S[s_pret],
+                                                      S[s_preq],
+                                                      S[s_pa])
         with open(f"prets_{ms}_{mm}.json", "w") as prets_file:
             json.dump(S_prets, prets_file, indent=4)
+        with open(f"preqs_{ms}_{mm}.json", "w") as preqs_file:
+            json.dump(S_preqs, preqs_file, indent=4)
         with open(f"probs_{ms}_{mm}.json", "w") as probs_file:
             json.dump(probs, probs_file, indent=4)
         print("Tables complete")
@@ -183,7 +186,7 @@ if __name__ == "__main__":
         json.dump(pi_json, policy_file, indent=4)
     print("Policy saved.")
     with open(f"vi_value_{ms}_{mm}.json", "w") as value_file:
-        V_json = {f"{n1}, {n2}": int(V[n1][n2]) for n1 in range(ms)
-                   for n2 in range(ms)}
+        V_json = {f"{n1}, {n2}": float(V[n1][n2]) for n1 in range(ms)
+                  for n2 in range(ms)}
         json.dump(V_json, value_file, indent=4)
     print("Values saved.")
