@@ -243,7 +243,7 @@ if __name__ == "__main__":
     print(METHOD)
     current_values, current_policy, action_set = initialize_problem()
     try:
-        with open(f"{MS}_{MM}_tables.json") as tables_file:
+        with open(f"./tables/{MS}_{MM}_tables.json") as tables_file:
             print("Loading tables...")
             tables = json.load(tables_file)
         probabilities = np.array(tables["probabilities"])
@@ -254,7 +254,7 @@ if __name__ == "__main__":
             "probabilities": probabilities.tolist(),
             "transition_rewards": transition_rewards.tolist()
         }
-        with open(f"{MS}_{MM}_tables.json", "w") as tables_file:
+        with open(f"./tables/{MS}_{MM}_tables.json", "w") as tables_file:
             json.dump(tables, tables_file)
 
     if METHOD == "policy iteration":
@@ -294,14 +294,16 @@ if __name__ == "__main__":
     runtime = datetime.now() - start
     print(f"Total runtime for {METHOD}: {runtime}")
 
-    with open(f"{argv[1]}_policy{MOD}_{MS}_{MM}.json", "w") as policy_file:
+    with open(f"./results/{argv[1]}_policy{MOD}_{MS}_{MM}.json",
+              "w") as policy_file:
         policy_json = {
             f"{state_1}, {state_2}": int(current_policy[state_1, state_2])
             for state_1, state_2 in product(range(MS), range(MS))
         }
         json.dump(policy_json, policy_file, indent=4)
     print("Policy saved.")
-    with open(f"{argv[1]}_value{MOD}_{MS}_{MM}.json", "w") as value_file:
+    with open(f"./results/{argv[1]}_value{MOD}_{MS}_{MM}.json",
+              "w") as value_file:
         values_json = {
             f"{state_1}, {state_2}": float(current_values[state_1, state_2])
             for state_1, state_2 in product(range(MS), range(MS))
