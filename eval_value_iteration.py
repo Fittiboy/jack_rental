@@ -30,7 +30,6 @@ def improve():
     for i1, i2 in product(range(ms), range(ms)):
         iqs = [(ia, get_value(i1, i2, ia)) for ia in A[i1, i2]]
         pi[i1, i2] = max(iqs, key=lambda x: x[1])[0]
-    print()
 
 
 def poisson(lmbd, n):
