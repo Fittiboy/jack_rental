@@ -29,7 +29,7 @@ def eval(d_min):
 
 def improve():
     for i1, i2 in product(range(ms), range(ms)):
-        print(f"Finding best action for state [{n1}, {n2}]  ", end='\r')
+        print(f"Finding best action for state [{i1}, {i2}]  ", end='\r')
         iqs = [(ia, get_value(i1, i2, ia)) for ia in A[i1, i2]]
         pi[i1, i2] = max(iqs, key=lambda x: x[1])[0]
     print()
