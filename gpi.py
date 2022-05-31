@@ -19,10 +19,18 @@ def eval(d_min):
         d = 0
         for e1, e2 in product(range(ms), range(ms)):
             ov = V[e1, e2]
-            vs = [(ea, get_value(e1, e2, ea)) for ea in A[e1, e2]]
-            best = max(vs, key=lambda x: x[1])
-            V[e1, e2] = best[1]
-            pi[e1, e2] = best[0]
+            best_v = V[e1, e2]
+            best_a = pi[e1, e2]
+            # vs = [(ea, get_value(e1, e2, ea)) for ea in A[e1, e2]]
+            # best = max(vs, key=lambda x: x[1])
+            # V[e1, e2] = best[1]
+            # pi[e1, e2] = best[0]
+            for ea in A[e1, e2]:
+                if (value := get_value(e1, e2, ea)) > best_v:
+                    best_v = value
+                    best_a = ea
+            pi[e1, e2] = best_a
+            V[e1, e2] = best_v
             d = max(d, abs(ov-V[e1, e2]))
         print(f"delta: {d:.9f}\t", end='\r')
         if d < d_min:
